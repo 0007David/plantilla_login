@@ -2,8 +2,8 @@
 
 
 import 'package:flutter/cupertino.dart';
-import 'package:formvalidation/src/pages/bloc/login_bloc.dart';
-export 'package:formvalidation/src/pages/bloc/login_bloc.dart';
+import 'package:formvalidation/src/bloc/login_bloc.dart';
+export 'package:formvalidation/src/bloc/login_bloc.dart';
 
 class Provider extends InheritedWidget{
 
@@ -30,7 +30,8 @@ class Provider extends InheritedWidget{
 
   static LoginBloc of ( BuildContext context){
     // del contexto (arbol de widget) busca un widget con el mismo tipo (provider).
-    return (context.inheritFromWidgetOfExactType(Provider) as Provider).loginBloc;
+    // return (context.inheritFromWidgetOfExactType(Provider) as Provider).loginBloc;
+    return context.dependOnInheritedWidgetOfExactType<Provider>().loginBloc;
   }
 
 }

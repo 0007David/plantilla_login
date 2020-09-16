@@ -1,28 +1,76 @@
 import 'package:flutter/material.dart';
-
-import 'bloc/provider.dart';
-
+import 'package:formvalidation/src/models/producto_model.dart';
+import 'package:formvalidation/src/providers/producto_provider.dart';
+// import 'package:formvalidation/src/bloc/provider.dart';
 
 class HomePage extends StatelessWidget {
+  final productosProvider = new ProductosProvider();
 
   @override
   Widget build(BuildContext context) {
-    final bloc = Provider.of(context);
-    
+    // final bloc = Provider.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('App bar'),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text('Email: ${bloc.email}'),
-          Divider(),
-          Text('Password: ${bloc.password}'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.backspace),
+            onPressed: () {
+              Navigator.pushNamed(context, 'login');
+            },
+          )
         ],
       ),
-      
+      body: _crearListado(),
+      floatingActionButton: _crearBoton(context),
+    );
+  }
+
+  Widget _crearListado() {
+    return FutureBuilder(
+      future: productosProvider.cargarProductos(),
+      builder:
+          (BuildContext context, AsyncSnapshot<List<ProductoModel>> snapshot) {
+        if (snapshot.hasData) {
+          final productos = snapshot.data;
+          return ListView.builder(
+            itemCount: productos.length,
+            itemBuilder: (BuildContext context, int i) =>
+                _crearItem(context, productos[i]),
+          );
+        } else {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _crearItem(BuildContext context, ProductoModel producto) {
+    return Dismissible(
+      key: UniqueKey(),
+      background: Container(color: Colors.red),
+      onDismissed: (direccion) {
+        // : Borrar registro
+        productosProvider.borrarProducto(producto.id);
+      },
+      child: ListTile(
+        title: Text('${producto.titulo} - ${producto.valor}'),
+        subtitle: Text(
+            producto.id + ' - Disponible: ' + producto.disponible.toString()),
+        onTap: () =>
+            Navigator.pushNamed(context, 'producto', arguments: producto),
+      ),
+    );
+  }
+
+  Widget _crearBoton(BuildContext context) {
+    return FloatingActionButton(
+      child: Icon(Icons.add),
+      backgroundColor: Colors.deepPurple,
+      onPressed: () => Navigator.pushNamed(context, 'producto'),
     );
   }
 }
