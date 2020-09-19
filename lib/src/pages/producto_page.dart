@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:formvalidation/src/bloc/productos_bloc.dart';
+import 'package:formvalidation/src/bloc/provider.dart';
 import 'package:formvalidation/src/models/producto_model.dart';
-import 'package:formvalidation/src/providers/producto_provider.dart';
+//import 'package:formvalidation/src/providers/producto_provider.dart';
 import 'package:formvalidation/src/utils/utils.dart' as utils;
 import 'package:image_picker/image_picker.dart';
 
@@ -15,13 +17,14 @@ class _ProductoPageState extends State<ProductoPage> {
   final formKey = GlobalKey<FormState>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  ProductosProvider productosProvider = new ProductosProvider();
+  ProductosBloc productosBloc;
   ProductoModel producto = new ProductoModel();
   bool _guardando = false;
   File _foto;
 
   @override
   Widget build(BuildContext context) {
+    productosBloc = Provider.productosBloc(context);
     final ProductoModel prodData = ModalRoute.of(context).settings.arguments;
     if (prodData != null) {
       producto = prodData;
@@ -116,28 +119,30 @@ class _ProductoPageState extends State<ProductoPage> {
     );
   }
 
-  void _submit() {
+  void _submit() async {
     if (formKey.currentState.validate()) {
       //formulario valido
-      formKey.currentState
-          .save(); // dispara todos los metodos onSave de los TextField del Form
+      // dispara todos los metodos onSave de los TextField del Form
+      formKey.currentState.save();
       setState(() {
         _guardando = true;
       });
       // print('Todo Okey');
+      if (_foto != null) {
+        producto.fotoUrl = await productosBloc.subirFoto(_foto);
+      }
 
       if (producto.id == null) {
-        productosProvider.crearProducto(producto);
+        productosBloc.agregarProducto(producto);
         mostrarSnackbar('Registro creado');
       } else {
-        productosProvider.editarProduto(producto);
+        productosBloc.editarProducto(producto);
         mostrarSnackbar('Registro actualizado');
       }
-      setState(() {
-        _guardando = false;
-      });
-
-      Navigator.pop(context);
+      print('submit' + producto.toString());
+      // setState(() {_guardando = false; });
+      // Navigator.of(context).pop();
+      Navigator.pushNamed(context, 'home');
     }
   }
 
@@ -152,12 +157,20 @@ class _ProductoPageState extends State<ProductoPage> {
   Widget _mostrarFoto() {
     if (producto.fotoUrl != null) {
       // tengo que renderizar la foto
-      return Container();
+      return FadeInImage(
+        image: NetworkImage(producto.fotoUrl),
+        placeholder: AssetImage('assets/jar-loading.gif'),
+        height: 300.0,
+        fit: BoxFit.contain,
+      );
     } else {
       // imagen por default
       return Image(
         // si hay algo en Path (path!=null) muestra path caso contrario miestra 'assets/...'
-        image: AssetImage(_foto?.path ?? 'assets/no-image.png'),
+        // _foto
+        image: _foto != null
+            ? FileImage(_foto)
+            : AssetImage('assets/no-image.png'),
         height: 300.0,
         fit: BoxFit.cover,
       );
@@ -169,7 +182,10 @@ class _ProductoPageState extends State<ProductoPage> {
   }
 
   void _procesarImagen(ImageSource tipoSource) async {
-    var imagen = await ImagePicker.pickImage(source: tipoSource);
+    final picker = ImagePicker();
+    final pickedFile = await picker.getImage(source: tipoSource);
+
+    var imagen = File(pickedFile.path);
     print('--------------------');
     print(imagen);
     print(imagen.path);
@@ -177,7 +193,7 @@ class _ProductoPageState extends State<ProductoPage> {
 
     if (imagen != null) {
       //limpieza
-
+      producto.fotoUrl = null;
     }
     setState(() {
       _foto = imagen;
