@@ -4,7 +4,7 @@ import 'package:formvalidation/src/bloc/provider.dart';
 import 'package:formvalidation/src/providers/usuario_provider.dart';
 import 'package:formvalidation/src/utils/utils.dart' as utils;
 
-class LoginPage extends StatelessWidget {
+class RegistroPage extends StatelessWidget {
   final usuarioProvider = new UsuarioProvider();
 
   @override
@@ -119,7 +119,7 @@ class LoginPage extends StatelessWidget {
             child: Column(
               children: <Widget>[
                 Text(
-                  'Ingreso',
+                  'Registro de Usuario',
                   style: TextStyle(fontSize: 20.0),
                 ),
                 SizedBox(
@@ -138,9 +138,8 @@ class LoginPage extends StatelessWidget {
             ),
           ),
           FlatButton(
-            child: Text('Crear cuenta'),
-            onPressed: () =>
-                Navigator.pushReplacementNamed(context, 'registro'),
+            child: Text('¿Ya tienes cuenta? Login'),
+            onPressed: () => Navigator.pushReplacementNamed(context, 'login'),
           ),
           SizedBox(
             height: 50.0,
@@ -210,7 +209,7 @@ class LoginPage extends StatelessWidget {
           return RaisedButton(
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 80.0, vertical: 15.0),
-              child: Text('Ingresar'),
+              child: Text('Registrar'),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5.0),
@@ -218,18 +217,18 @@ class LoginPage extends StatelessWidget {
             elevation: 0.0,
             color: Colors.deepPurple,
             textColor: Colors.white,
-            onPressed: snapshot.hasData ? () => _login(context, bloc) : null,
+            onPressed: snapshot.hasData ? () => _register(context, bloc) : null,
           );
         });
   }
 
-  _login(BuildContext context, LoginBloc bloc) async {
+  _register(BuildContext context, LoginBloc bloc) async {
     print('====================');
     print('Email: ${bloc.email}');
     print('Password: ${bloc.password}');
     print('====================');
-    Map info = await usuarioProvider.login(bloc.email, bloc.password);
-
+    Map info = await usuarioProvider.nuevoUsuario(bloc.email, bloc.password);
+    print('Map ${info.toString()}');
     if (info['ok']) {
       Navigator.pushReplacementNamed(context, 'home');
     } else {
